@@ -1,1 +1,125 @@
-q
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+
+<style>
+
+body{
+font-family:sans-serif;
+background:#eee;
+}
+
+h2{
+background:#222;
+color:white;
+padding:20px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
+padding:15px;
+}
+
+.box{
+background:white;
+padding:20px;
+border-radius:12px;
+}
+
+.number{
+font-size:32px;
+font-weight:bold;
+}
+
+.green{
+color:green;
+}
+
+.red{
+color:red;
+}
+
+button{
+width:90%;
+margin:20px;
+padding:20px;
+font-size:24px;
+background:#008c45;
+color:white;
+border:0;
+border-radius:15px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h2>
+ラインA 生産状況
+</h2>
+
+
+<div class="grid">
+
+<div class="box">
+生産計画
+<div class="number">
+500
+</div>
+</div>
+
+
+<div class="box">
+完成数
+<div class="number green">
+420
+</div>
+</div>
+
+
+<div class="box">
+進捗率
+<div class="number">
+84%
+</div>
+</div>
+
+
+<div class="box">
+設備状態
+<div class="number green">
+稼働中
+</div>
+</div>
+
+
+</div>
+
+
+<div class="box">
+<h3>実績登録</h3>
+
+品番<br>
+<input style="width:100%;font-size:20px">
+
+<br><br>
+
+数量<br>
+<input style="width:100%;font-size:30px">
+
+</div>
+
+
+<button>
+実績登録
+</button>
+
+
+</body>
+</html>
