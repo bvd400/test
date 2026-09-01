@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
 
-```1402
+```1416
 <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0">
 
-<title>QRコード読み取りデモ</title>
+<title>QRコード・写真撮影デモ</title>
 
 <!-- html5-qrcode -->
 <script src="https://unpkg.com/html5-qrcode"></script>
@@ -50,12 +50,40 @@
     }
 
     /* =========================
-       カメラ
+       セクション
+       ========================= */
+
+    .section {
+        margin-top: 20px;
+        padding: 18px;
+
+        background: white;
+        border-radius: 12px;
+    }
+
+    .section-title {
+        margin-bottom: 12px;
+
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .section-description {
+        margin-bottom: 12px;
+
+        color: #666;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    /* =========================
+       QRカメラ
        ========================= */
 
     #reader {
         width: 100%;
         overflow: hidden;
+
         background: #111;
         border-radius: 16px;
     }
@@ -73,7 +101,7 @@
         margin-top: 14px;
         padding: 14px 16px;
 
-        background: white;
+        background: #f3f4f6;
         border-radius: 10px;
 
         font-size: 14px;
@@ -107,7 +135,8 @@
         margin-top: 12px;
     }
 
-    button {
+    button,
+    .file-button {
         min-height: 48px;
 
         border: 0;
@@ -118,6 +147,10 @@
 
         cursor: pointer;
         touch-action: manipulation;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .primary {
@@ -141,26 +174,10 @@
     }
 
     /* =========================
-       最新結果
+       QR結果
        ========================= */
 
-    .result {
-        margin-top: 20px;
-        padding: 18px;
-
-        background: white;
-        border-radius: 12px;
-    }
-
-    .result-title {
-        margin-bottom: 8px;
-
-        font-size: 14px;
-        font-weight: bold;
-        color: #444;
-    }
-
-    #resultText {
+    .result-value {
         min-height: 48px;
 
         padding: 12px;
@@ -176,14 +193,6 @@
        履歴
        ========================= */
 
-    .history {
-        margin-top: 20px;
-        padding: 18px;
-
-        background: white;
-        border-radius: 12px;
-    }
-
     .history-header {
         display: flex;
         justify-content: space-between;
@@ -194,11 +203,6 @@
         margin-bottom: 12px;
     }
 
-    .history-title {
-        font-size: 16px;
-        font-weight: bold;
-    }
-
     .history-count {
         color: #666;
         font-size: 13px;
@@ -207,14 +211,15 @@
     .table-container {
         width: 100%;
         overflow-x: auto;
+
         -webkit-overflow-scrolling: touch;
     }
 
     table {
         width: 100%;
-        border-collapse: collapse;
-
         min-width: 500px;
+
+        border-collapse: collapse;
 
         font-size: 14px;
     }
@@ -226,14 +231,11 @@
         border-bottom: 1px solid #e5e7eb;
 
         text-align: left;
-
         vertical-align: top;
     }
 
     th {
         background: #f9fafb;
-        font-weight: 600;
-        color: #374151;
     }
 
     td.qr-value {
@@ -259,25 +261,124 @@
     }
 
     /* =========================
-       情報
+       写真
        ========================= */
 
-    .info {
-        margin-top: 20px;
-        padding: 16px;
-
-        background: #e0f2fe;
-        border-radius: 12px;
-
-        color: #075985;
-
-        font-size: 13px;
-        line-height: 1.7;
+    /*
+     * 本物のfile inputは非表示
+     */
+    #photoInput {
+        display: none;
     }
 
-    .info strong {
+    .photo-button {
+        width: 100%;
+    }
+
+    .photo-info {
+        margin-top: 12px;
+
+        color: #666;
+
+        font-size: 13px;
+    }
+
+    /*
+     * 写真一覧
+     */
+    .photo-grid {
+        display: grid;
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+        gap: 12px;
+
+        margin-top: 16px;
+    }
+
+    .photo-item {
+        position: relative;
+
+        overflow: hidden;
+
+        background: #f3f4f6;
+
+        border-radius: 10px;
+    }
+
+    .photo-item img {
         display: block;
-        margin-bottom: 6px;
+
+        width: 100%;
+        aspect-ratio: 1 / 1;
+
+        object-fit: cover;
+    }
+
+    /*
+     * 写真番号
+     */
+    .photo-number {
+        position: absolute;
+
+        top: 8px;
+        left: 8px;
+
+        padding: 4px 8px;
+
+        background: rgba(0, 0, 0, 0.65);
+        color: white;
+
+        border-radius: 6px;
+
+        font-size: 12px;
+    }
+
+    /*
+     * 削除ボタン
+     */
+    .photo-delete {
+        position: absolute;
+
+        top: 6px;
+        right: 6px;
+
+        width: 34px;
+        min-height: 34px;
+
+        padding: 0;
+
+        border-radius: 50%;
+
+        background: rgba(0, 0, 0, 0.65);
+        color: white;
+
+        font-size: 18px;
+    }
+
+    /*
+     * 写真なし
+     */
+    .no-photo {
+        padding: 30px 10px;
+
+        text-align: center;
+
+        color: #9ca3af;
+
+        font-size: 14px;
+    }
+
+    /* =========================
+       写真ファイル情報
+       ========================= */
+
+    .file-info {
+        margin-top: 12px;
+
+        font-size: 13px;
+        line-height: 1.6;
     }
 
     /* =========================
@@ -299,6 +400,28 @@
         line-height: 1.6;
     }
 
+    /* =========================
+       情報
+       ========================= */
+
+    .info {
+        margin-top: 20px;
+        padding: 16px;
+
+        background: #e0f2fe;
+        border-radius: 12px;
+
+        color: #075985;
+
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .info strong {
+        display: block;
+        margin-bottom: 6px;
+    }
+
     @media (max-width: 480px) {
 
         .container {
@@ -309,13 +432,9 @@
             font-size: 21px;
         }
 
-        #reader {
-            border-radius: 12px;
-        }
-
-        .history-header {
-            align-items: flex-start;
-            flex-direction: column;
+        .photo-grid {
+            grid-template-columns:
+                repeat(2, 1fr);
         }
 
     }
@@ -330,7 +449,7 @@
 <div class="container">
 
 ```
-<h1>QRコード読み取り</h1>
+<h1>QRコード・写真撮影</h1>
 
 <div class="description">
     Android Chrome / iPad Safari 対応デモ
@@ -340,75 +459,85 @@
 <!-- HTTPS警告 -->
 <div id="httpsWarning">
 
-    カメラを使用するにはHTTPS接続が必要です。<br>
-    開発中は localhost でも利用できます。
+    QRコード読み取りではカメラAPIを使用するため、
+    HTTPS環境を推奨します。
 
 </div>
 
 
-<!-- =========================
-     カメラ
-     ========================= -->
+<!-- ==================================================
+     QRコード
+     ================================================== -->
 
-<div id="reader"></div>
+<div class="section">
+
+    <div class="section-title">
+        ① QRコード読み取り
+    </div>
+
+    <div class="section-description">
+
+        QRコードを読み取って製品番号などを取得します。
+
+    </div>
 
 
-<!-- =========================
-     ステータス
-     ========================= -->
+    <div id="reader"></div>
 
-<div
-    id="status"
-    class="status"
-    aria-live="polite">
 
-    「カメラ開始」を押してください。
+    <div
+        id="status"
+        class="status">
+
+        「カメラ開始」を押してください。
+
+    </div>
+
+
+    <div class="buttons">
+
+        <button
+            id="startButton"
+            class="primary"
+            type="button">
+
+            カメラ開始
+
+        </button>
+
+
+        <button
+            id="stopButton"
+            class="secondary"
+            type="button"
+            disabled>
+
+            カメラ停止
+
+        </button>
+
+    </div>
 
 </div>
 
 
-<!-- =========================
-     カメラ操作
-     ========================= -->
+<!-- ==================================================
+     最新QR結果
+     ================================================== -->
 
-<div class="buttons">
+<div class="section">
 
-    <button
-        id="startButton"
-        class="primary"
-        type="button">
-
-        カメラ開始
-
-    </button>
-
-
-    <button
-        id="stopButton"
-        class="secondary"
-        type="button"
-        disabled>
-
-        カメラ停止
-
-    </button>
-
-</div>
-
-
-<!-- =========================
-     最新の読み取り結果
-     ========================= -->
-
-<div class="result">
-
-    <div class="result-title">
+    <div class="section-title">
         最新の読み取り結果
     </div>
 
 
-    <div id="resultText">
+    <div
+        id="resultText"
+        class="result-value">
+
         まだ読み取っていません
+
     </div>
 
 
@@ -439,17 +568,17 @@
 </div>
 
 
-<!-- =========================
-     読み取り履歴
-     ========================= -->
+<!-- ==================================================
+     QR履歴
+     ================================================== -->
 
-<div class="history">
+<div class="section">
 
     <div class="history-header">
 
         <div>
 
-            <div class="history-title">
+            <div class="section-title">
                 読み取り履歴
             </div>
 
@@ -469,7 +598,7 @@
             class="danger"
             type="button">
 
-            履歴をクリア
+            履歴クリア
 
         </button>
 
@@ -518,29 +647,107 @@
 </div>
 
 
-<!-- =========================
+<!-- ==================================================
+     写真撮影
+     ================================================== -->
+
+<div class="section">
+
+    <div class="section-title">
+        ② 写真撮影・アップロード
+    </div>
+
+
+    <div class="section-description">
+
+        製品や作業状態などの写真を撮影します。
+
+    </div>
+
+
+    <!--
+        capture="environment"
+        → 背面カメラを優先
+    -->
+    <input
+        id="photoInput"
+        type="file"
+        accept="image/*"
+        capture="environment">
+
+
+    <label
+        for="photoInput"
+        class="file-button primary photo-button">
+
+        📷 写真を撮影
+
+    </label>
+
+
+    <div
+        id="photoInfo"
+        class="photo-info">
+
+        写真はまだありません。
+
+    </div>
+
+
+    <!-- 写真プレビュー -->
+    <div
+        id="photoGrid"
+        class="photo-grid">
+
+    </div>
+
+
+    <div class="buttons">
+
+        <button
+            id="clearPhotosButton"
+            class="danger"
+            type="button">
+
+            写真をすべて削除
+
+        </button>
+
+
+        <button
+            id="uploadButton"
+            class="primary"
+            type="button">
+
+            写真をアップロード
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ==================================================
      説明
-     ========================= -->
+     ================================================== -->
 
 <div class="info">
 
-    <strong>使い方</strong>
+    <strong>このデモについて</strong>
 
-    1. 「カメラ開始」をタップ<br>
-    2. カメラの使用を許可<br>
-    3. QRコードをカメラにかざす<br>
-    4. 読み取った値が下の履歴に追加されます<br><br>
+    QRコードと写真撮影は別の仕組みになっています。<br><br>
 
+    QRコード：
+    html5-qrcodeを使用してカメラ映像からリアルタイムに読み取ります。<br><br>
 
-    <strong>対応</strong>
+    写真：
+    HTML標準の
+    「input type=file + capture」
+    を使用します。<br><br>
 
-    Android Chrome<br>
-    iPad Safari<br>
-    iPhone Safari<br><br>
-
-
-    ※ カメラを使用するため、
-    HTTPS環境での利用を推奨します。
+    撮影した写真は現在ブラウザ上で保持しているだけで、
+    サーバーにはまだ送信していません。
 
 </div>
 ```
@@ -549,11 +756,9 @@
 
 <script>
 
-    /*
-     * ==========================================
-     * 状態
-     * ==========================================
-     */
+    /* ==================================================
+       QRコード
+       ================================================== */
 
     let html5QrCode = null;
 
@@ -561,26 +766,25 @@
 
     let lastResult = "";
 
-    /*
-     * 読み取り履歴
-     *
-     * 例:
-     *
-     * [
-     *   {
-     *      value: "MFG-000001",
-     *      time: "13:45:10"
-     *   }
-     * ]
-     */
     let history = [];
 
 
+    /* ==================================================
+       写真
+       ================================================== */
+
     /*
-     * ==========================================
-     * DOM
-     * ==========================================
+     * Fileオブジェクトを保持
+     *
+     * 実際のアップロード時には
+     * この配列をFormDataに入れる。
      */
+    let photos = [];
+
+
+    /* ==================================================
+       DOM
+       ================================================== */
 
     const status =
         document.getElementById("status");
@@ -617,17 +821,35 @@
             "historyCount"
         );
 
-    const httpsWarning =
+    const photoInput =
         document.getElementById(
-            "httpsWarning"
+            "photoInput"
+        );
+
+    const photoGrid =
+        document.getElementById(
+            "photoGrid"
+        );
+
+    const photoInfo =
+        document.getElementById(
+            "photoInfo"
+        );
+
+    const clearPhotosButton =
+        document.getElementById(
+            "clearPhotosButton"
+        );
+
+    const uploadButton =
+        document.getElementById(
+            "uploadButton"
         );
 
 
-    /*
-     * ==========================================
-     * HTTPSチェック
-     * ==========================================
-     */
+    /* ==================================================
+       HTTPS
+       ================================================== */
 
     function checkHttps() {
 
@@ -641,17 +863,16 @@
             !localhost
         ) {
 
-            httpsWarning.style.display =
-                "block";
+            document.getElementById(
+                "httpsWarning"
+            ).style.display = "block";
         }
     }
 
 
-    /*
-     * ==========================================
-     * ステータス
-     * ==========================================
-     */
+    /* ==================================================
+       ステータス
+       ================================================== */
 
     function setStatus(
         message,
@@ -672,11 +893,9 @@
     }
 
 
-    /*
-     * ==========================================
-     * カメラ開始
-     * ==========================================
-     */
+    /* ==================================================
+       QRカメラ開始
+       ================================================== */
 
     async function startScanner() {
 
@@ -721,7 +940,6 @@
                 },
 
                 aspectRatio: 1.333334
-
             };
 
 
@@ -733,17 +951,8 @@
 
                 config,
 
-                /*
-                 * QR成功
-                 */
                 onScanSuccess,
 
-                /*
-                 * QR失敗
-                 *
-                 * QRが見つからないだけなので
-                 * 何もしない
-                 */
                 onScanFailure
             );
 
@@ -786,32 +995,26 @@
     }
 
 
-    /*
-     * ==========================================
-     * QR読み取り成功
-     * ==========================================
-     */
+    /* ==================================================
+       QR成功
+       ================================================== */
 
     async function onScanSuccess(
         decodedText,
         decodedResult
     ) {
 
-        /*
-         * カメラ停止前に
-         * 二重読み取りを防ぐ
-         */
         if (!scanning) {
             return;
         }
 
 
+        /*
+         * 二重読み取り防止
+         */
         scanning = false;
 
 
-        /*
-         * 最新結果
-         */
         lastResult =
             decodedText;
 
@@ -825,16 +1028,13 @@
 
 
         /*
-         * 履歴へ追加
+         * 履歴追加
          */
         addHistory(
             decodedText
         );
 
 
-        /*
-         * 成功表示
-         */
         setStatus(
             "QRコードを読み取りました！",
             "success"
@@ -859,26 +1059,21 @@
     }
 
 
-    /*
-     * ==========================================
-     * QR読み取り失敗
-     * ==========================================
-     */
+    /* ==================================================
+       QR失敗
+       ================================================== */
 
     function onScanFailure(error) {
 
         /*
-         * QRが見つからない状態は
-         * 正常なので何もしない。
+         * QRが見つからない状態は正常。
          */
     }
 
 
-    /*
-     * ==========================================
-     * 履歴追加
-     * ==========================================
-     */
+    /* ==================================================
+       QR履歴
+       ================================================== */
 
     function addHistory(value) {
 
@@ -910,24 +1105,12 @@
     }
 
 
-    /*
-     * ==========================================
-     * 履歴表示
-     * ==========================================
-     */
-
     function renderHistory() {
 
-        /*
-         * 件数
-         */
         historyCount.textContent =
             history.length + "件";
 
 
-        /*
-         * 履歴なし
-         */
         if (history.length === 0) {
 
             historyBody.innerHTML = `
@@ -946,15 +1129,9 @@
         }
 
 
-        /*
-         * 一度クリア
-         */
         historyBody.innerHTML = "";
 
 
-        /*
-         * 新しいものを上に表示
-         */
         const reversed =
             [...history].reverse();
 
@@ -968,9 +1145,6 @@
                     );
 
 
-                /*
-                 * No.
-                 */
                 const no =
                     document.createElement(
                         "td"
@@ -983,9 +1157,6 @@
                     history.length - index;
 
 
-                /*
-                 * QR値
-                 */
                 const value =
                     document.createElement(
                         "td"
@@ -994,17 +1165,10 @@
                 value.className =
                     "qr-value";
 
-                /*
-                 * textContentを使うことで
-                 * HTMLを実行させない
-                 */
                 value.textContent =
                     item.value;
 
 
-                /*
-                 * 時刻
-                 */
                 const time =
                     document.createElement(
                         "td"
@@ -1030,11 +1194,9 @@
     }
 
 
-    /*
-     * ==========================================
-     * カメラ停止
-     * ==========================================
-     */
+    /* ==================================================
+       QRカメラ停止
+       ================================================== */
 
     async function stopScanner() {
 
@@ -1073,7 +1235,6 @@
 
         html5QrCode = null;
 
-
         scanning = false;
 
 
@@ -1085,11 +1246,9 @@
     }
 
 
-    /*
-     * ==========================================
-     * カメラエラー
-     * ==========================================
-     */
+    /* ==================================================
+       カメラエラー
+       ================================================== */
 
     function handleCameraError(error) {
 
@@ -1118,16 +1277,6 @@
 
         }
         else if (
-            error &&
-            error.name ===
-                "NotReadableError"
-        ) {
-
-            message =
-                "カメラを使用できません。他のアプリがカメラを使用していないか確認してください。";
-
-        }
-        else if (
             !window.isSecureContext
         ) {
 
@@ -1143,11 +1292,9 @@
     }
 
 
-    /*
-     * ==========================================
-     * 結果コピー
-     * ==========================================
-     */
+    /* ==================================================
+       QR結果コピー
+       ================================================== */
 
     async function copyResult() {
 
@@ -1172,18 +1319,16 @@
         catch (error) {
 
             setStatus(
-                "コピーできませんでした。結果を長押ししてコピーしてください。",
+                "コピーできませんでした。",
                 "warning"
             );
         }
     }
 
 
-    /*
-     * ==========================================
-     * 最新結果クリア
-     * ==========================================
-     */
+    /* ==================================================
+       最新結果クリア
+       ================================================== */
 
     function clearResult() {
 
@@ -1195,17 +1340,16 @@
         copyButton.disabled =
             true;
 
+
         setStatus(
             "最新の結果をクリアしました。"
         );
     }
 
 
-    /*
-     * ==========================================
-     * 履歴クリア
-     * ==========================================
-     */
+    /* ==================================================
+       QR履歴クリア
+       ================================================== */
 
     function clearHistory() {
 
@@ -1214,16 +1358,12 @@
         }
 
 
-        /*
-         * 確認
-         */
-        const confirmed =
-            window.confirm(
+        if (
+            !window.confirm(
                 "読み取り履歴をすべて削除しますか？"
-            );
+            )
+        ) {
 
-
-        if (!confirmed) {
             return;
         }
 
@@ -1240,11 +1380,311 @@
     }
 
 
-    /*
-     * ==========================================
-     * イベント
-     * ==========================================
-     */
+    /* ==================================================
+       写真選択・撮影
+       ================================================== */
+
+    photoInput.addEventListener(
+        "change",
+        function(event) {
+
+            const files =
+                Array.from(
+                    event.target.files
+                );
+
+
+            if (files.length === 0) {
+                return;
+            }
+
+
+            /*
+             * 今回は1回につき1枚追加
+             *
+             * 複数枚を許可したい場合は
+             * multiple属性を追加して
+             * ここでforEachする。
+             */
+            const file =
+                files[0];
+
+
+            /*
+             * 画像か確認
+             */
+            if (
+                !file.type.startsWith(
+                    "image/"
+                )
+            ) {
+
+                alert(
+                    "画像ファイルを選択してください。"
+                );
+
+                return;
+            }
+
+
+            /*
+             * 配列へ追加
+             */
+            photos.push(file);
+
+
+            /*
+             * 表示
+             */
+            renderPhotos();
+
+
+            /*
+             * 同じファイルを再度選択できるようにする
+             */
+            photoInput.value = "";
+        }
+    );
+
+
+    /* ==================================================
+       写真表示
+       ================================================== */
+
+    function renderPhotos() {
+
+        photoGrid.innerHTML = "";
+
+
+        /*
+         * 写真なし
+         */
+        if (photos.length === 0) {
+
+            photoInfo.textContent =
+                "写真はまだありません。";
+
+            return;
+        }
+
+
+        photoInfo.textContent =
+            photos.length +
+            "枚の写真があります。";
+
+
+        photos.forEach(
+            (file, index) => {
+
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+                item.className =
+                    "photo-item";
+
+
+                /*
+                 * File → URL
+                 */
+                const imageUrl =
+                    URL.createObjectURL(
+                        file
+                    );
+
+
+                const img =
+                    document.createElement(
+                        "img"
+                    );
+
+                img.src =
+                    imageUrl;
+
+                img.alt =
+                    "撮影写真 " +
+                    (index + 1);
+
+
+                /*
+                 * 番号
+                 */
+                const number =
+                    document.createElement(
+                        "div"
+                    );
+
+                number.className =
+                    "photo-number";
+
+                number.textContent =
+                    (index + 1) +
+                    "枚目";
+
+
+                /*
+                 * 削除
+                 */
+                const deleteButton =
+                    document.createElement(
+                        "button"
+                    );
+
+                deleteButton.className =
+                    "photo-delete";
+
+                deleteButton.type =
+                    "button";
+
+                deleteButton.textContent =
+                    "×";
+
+
+                deleteButton.addEventListener(
+                    "click",
+                    function() {
+
+                        deletePhoto(index);
+                    }
+                );
+
+
+                item.appendChild(img);
+
+                item.appendChild(number);
+
+                item.appendChild(
+                    deleteButton
+                );
+
+
+                photoGrid.appendChild(
+                    item
+                );
+            }
+        );
+    }
+
+
+    /* ==================================================
+       写真削除
+       ================================================== */
+
+    function deletePhoto(index) {
+
+        if (
+            index < 0 ||
+            index >= photos.length
+        ) {
+
+            return;
+        }
+
+
+        photos.splice(
+            index,
+            1
+        );
+
+
+        renderPhotos();
+    }
+
+
+    /* ==================================================
+       写真全削除
+       ================================================== */
+
+    function clearPhotos() {
+
+        if (photos.length === 0) {
+            return;
+        }
+
+
+        if (
+            !window.confirm(
+                "写真をすべて削除しますか？"
+            )
+        ) {
+
+            return;
+        }
+
+
+        photos = [];
+
+
+        renderPhotos();
+    }
+
+
+    /* ==================================================
+       写真アップロード
+       ================================================== */
+
+    async function uploadPhotos() {
+
+        if (photos.length === 0) {
+
+            alert(
+                "アップロードする写真がありません。"
+            );
+
+            return;
+        }
+
+
+        /*
+         * ==========================================
+         * 実際のサーバー送信例
+         * ==========================================
+         *
+         * const formData = new FormData();
+         *
+         * formData.append(
+         *     "productNo",
+         *     lastResult
+         * );
+         *
+         * photos.forEach(
+         *     (file, index) => {
+         *
+         *         formData.append(
+         *             "photos",
+         *             file
+         *         );
+         *
+         *     }
+         * );
+         *
+         *
+         * const response =
+         *     await fetch(
+         *         "/api/photos/upload",
+         *         {
+         *             method: "POST",
+         *             body: formData
+         *         }
+         *     );
+         *
+         */
+
+        /*
+         * 今はデモなので送信しない
+         */
+        alert(
+            photos.length +
+            "枚の写真をアップロードできます。\n\n" +
+            "現在はデモのため、サーバーへの送信処理は行っていません。"
+        );
+    }
+
+
+    /* ==================================================
+       イベント
+       ================================================== */
 
     startButton.addEventListener(
         "click",
@@ -1283,9 +1723,22 @@
     );
 
 
-    /*
-     * ページを離れるとき
-     */
+    clearPhotosButton.addEventListener(
+        "click",
+        clearPhotos
+    );
+
+
+    uploadButton.addEventListener(
+        "click",
+        uploadPhotos
+    );
+
+
+    /* ==================================================
+       ページ終了
+       ================================================== */
+
     window.addEventListener(
         "pagehide",
         () => {
@@ -1295,15 +1748,15 @@
     );
 
 
-    /*
-     * ==========================================
-     * 初期化
-     * ==========================================
-     */
+    /* ==================================================
+       初期化
+       ================================================== */
 
     checkHttps();
 
     renderHistory();
+
+    renderPhotos();
 
 </script>
 
