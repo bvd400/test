@@ -1,489 +1,1076 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-    <title>QRコード読み取りデモ</title>
+```
+<meta
+    name="viewport"
+    content="width=device-width,
+             initial-scale=1,
+             maximum-scale=1,
+             viewport-fit=cover">
 
-    <style>
-        * {
-            box-sizing: border-box;
+<meta name="theme-color" content="#111827">
+
+<title>QRコード読み取りデモ</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        background: #f3f4f6;
+        color: #111827;
+        font-family:
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            "Noto Sans JP",
+            sans-serif;
+    }
+
+    body {
+        min-height: 100vh;
+    }
+
+    .container {
+        width: min(100% - 24px, 640px);
+        margin: 0 auto;
+        padding: 20px 0 40px;
+    }
+
+    h1 {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.4;
+    }
+
+    .description {
+        margin-top: 6px;
+        margin-bottom: 18px;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    /*
+     * カメラエリア
+     */
+    .camera {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+        border-radius: 16px;
+        background: #000;
+    }
+
+    #video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /*
+     * カメラ未起動時
+     */
+    .camera-message {
+        position: absolute;
+        inset: 0;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: 20px;
+
+        color: white;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.65);
+
+        pointer-events: none;
+    }
+
+    /*
+     * QR読み取り枠
+     */
+    .scan-area {
+        position: absolute;
+
+        width: min(65vw, 300px);
+        aspect-ratio: 1 / 1;
+
+        left: 50%;
+        top: 50%;
+
+        transform: translate(-50%, -50%);
+
+        border: 3px solid white;
+        border-radius: 14px;
+
+        box-shadow:
+            0 0 0 9999px rgba(0, 0, 0, 0.40);
+
+        pointer-events: none;
+    }
+
+    /*
+     * 四隅を少し強調
+     */
+    .corner {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+    }
+
+    .corner.tl {
+        left: -3px;
+        top: -3px;
+        border-left: 5px solid #22c55e;
+        border-top: 5px solid #22c55e;
+        border-radius: 10px 0 0 0;
+    }
+
+    .corner.tr {
+        right: -3px;
+        top: -3px;
+        border-right: 5px solid #22c55e;
+        border-top: 5px solid #22c55e;
+        border-radius: 0 10px 0 0;
+    }
+
+    .corner.bl {
+        left: -3px;
+        bottom: -3px;
+        border-left: 5px solid #22c55e;
+        border-bottom: 5px solid #22c55e;
+        border-radius: 0 0 0 10px;
+    }
+
+    .corner.br {
+        right: -3px;
+        bottom: -3px;
+        border-right: 5px solid #22c55e;
+        border-bottom: 5px solid #22c55e;
+        border-radius: 0 0 10px 0;
+    }
+
+    /*
+     * スキャンライン
+     */
+    .scan-line {
+        position: absolute;
+
+        left: 7%;
+        right: 7%;
+
+        top: 50%;
+
+        height: 2px;
+
+        background: #22c55e;
+
+        animation: scan 2s ease-in-out infinite;
+    }
+
+    @keyframes scan {
+
+        0% {
+            transform: translateY(-100px);
+            opacity: 0.5;
         }
 
-        body {
-            margin: 0;
-            font-family:
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                sans-serif;
-            background: #f5f6f8;
-            color: #222;
+        50% {
+            transform: translateY(100px);
+            opacity: 1;
         }
+
+        100% {
+            transform: translateY(-100px);
+            opacity: 0.5;
+        }
+    }
+
+    /*
+     * ステータス
+     */
+    .status {
+        margin-top: 14px;
+
+        padding: 14px 16px;
+
+        border-radius: 10px;
+
+        background: white;
+
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .status.success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status.error {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status.warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    /*
+     * ボタン
+     */
+    .buttons {
+        display: grid;
+
+        grid-template-columns: 1fr 1fr;
+
+        gap: 10px;
+
+        margin-top: 12px;
+    }
+
+    button {
+        min-height: 48px;
+
+        padding: 10px 14px;
+
+        border: 0;
+        border-radius: 10px;
+
+        font-size: 16px;
+        font-weight: 600;
+
+        cursor: pointer;
+
+        touch-action: manipulation;
+    }
+
+    button.primary {
+        background: #2563eb;
+        color: white;
+    }
+
+    button.secondary {
+        background: #e5e7eb;
+        color: #111827;
+    }
+
+    button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    /*
+     * カメラ切り替え
+     */
+    .camera-select {
+        margin-top: 12px;
+    }
+
+    .camera-select label {
+        display: block;
+
+        margin-bottom: 6px;
+
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    select {
+        width: 100%;
+
+        min-height: 48px;
+
+        padding: 8px 12px;
+
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+
+        background: white;
+
+        font-size: 16px;
+    }
+
+    /*
+     * 結果
+     */
+    .result {
+        margin-top: 18px;
+
+        padding: 18px;
+
+        background: white;
+
+        border-radius: 12px;
+    }
+
+    .result-title {
+        margin-bottom: 8px;
+
+        font-size: 14px;
+        font-weight: 700;
+        color: #374151;
+    }
+
+    #result {
+        min-height: 48px;
+
+        padding: 12px;
+
+        border-radius: 8px;
+
+        background: #f3f4f6;
+
+        word-break: break-all;
+
+        line-height: 1.6;
+    }
+
+    .result-buttons {
+        display: grid;
+
+        grid-template-columns: 1fr;
+
+        gap: 8px;
+
+        margin-top: 10px;
+    }
+
+    /*
+     * 情報
+     */
+    .info {
+        margin-top: 18px;
+
+        padding: 16px;
+
+        border-radius: 12px;
+
+        background: #e0f2fe;
+
+        color: #075985;
+
+        font-size: 13px;
+
+        line-height: 1.7;
+    }
+
+    .info strong {
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    /*
+     * HTTPS警告
+     */
+    .https-warning {
+        display: none;
+
+        margin-bottom: 14px;
+
+        padding: 14px;
+
+        border-radius: 10px;
+
+        background: #fef3c7;
+
+        color: #92400e;
+
+        font-size: 13px;
+
+        line-height: 1.6;
+    }
+
+    /*
+     * PC
+     */
+    @media (min-width: 700px) {
 
         .container {
-            width: min(100% - 32px, 600px);
-            margin: 0 auto;
-            padding: 24px 0 40px;
-        }
-
-        h1 {
-            font-size: 24px;
-            margin: 0 0 8px;
-        }
-
-        .description {
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        .camera-container {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 4 / 3;
-            background: #111;
-            border-radius: 16px;
-            overflow: hidden;
-        }
-
-        #video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* QR読み取り枠 */
-        .scan-frame {
-            position: absolute;
-            width: 55%;
-            aspect-ratio: 1;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            border: 3px solid white;
-            border-radius: 12px;
-            box-shadow:
-                0 0 0 9999px rgba(0, 0, 0, 0.35);
-        }
-
-        .scan-line {
-            position: absolute;
-            left: 5%;
-            right: 5%;
-            top: 50%;
-            height: 2px;
-            background: #00e676;
-            animation: scan 2s infinite ease-in-out;
-        }
-
-        @keyframes scan {
-            0% {
-                transform: translateY(-80px);
-            }
-
-            50% {
-                transform: translateY(80px);
-            }
-
-            100% {
-                transform: translateY(-80px);
-            }
-        }
-
-        .status {
-            margin-top: 16px;
-            padding: 14px;
-            background: white;
-            border-radius: 10px;
-            text-align: center;
+            padding-top: 40px;
         }
 
         .buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 16px;
+            grid-template-columns: 1fr 1fr;
         }
 
-        button {
-            flex: 1;
-            min-height: 48px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            cursor: pointer;
+        .result-buttons {
+            grid-template-columns: 1fr 1fr;
         }
+    }
+</style>
+```
 
-        #startButton {
-            background: #1976d2;
-            color: white;
-        }
-
-        #stopButton {
-            background: #ddd;
-            color: #333;
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .result {
-            margin-top: 24px;
-            padding: 20px;
-            background: white;
-            border-radius: 12px;
-        }
-
-        .result-title {
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        #resultText {
-            min-height: 24px;
-            padding: 12px;
-            background: #f1f3f5;
-            border-radius: 8px;
-            word-break: break-all;
-        }
-
-        .error {
-            color: #d32f2f;
-        }
-
-        .success {
-            color: #2e7d32;
-            font-weight: bold;
-        }
-
-        .info {
-            margin-top: 24px;
-            padding: 16px;
-            background: #e3f2fd;
-            border-radius: 10px;
-            font-size: 14px;
-            line-height: 1.7;
-        }
-
-        /* canvasは解析用なので非表示 */
-        #canvas {
-            display: none;
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                width: min(100% - 20px, 600px);
-                padding-top: 16px;
-            }
-
-            h1 {
-                font-size: 21px;
-            }
-
-            .camera-container {
-                border-radius: 12px;
-            }
-
-            .scan-frame {
-                width: 65%;
-            }
-        }
-    </style>
 </head>
 
 <body>
 
 <div class="container">
 
-    <h1>QRコード読み取り</h1>
+```
+<h1>QRコード読み取り</h1>
 
-    <div class="description">
-        カメラにQRコードをかざしてください
-    </div>
+<div class="description">
+    Android Chrome / iPad Safari 対応デモ
+</div>
 
-    <!-- カメラ -->
-    <div class="camera-container">
+<!-- HTTPS警告 -->
+<div
+    id="httpsWarning"
+    class="https-warning">
 
-        <video
-            id="video"
-            autoplay
-            playsinline
-            muted>
-        </video>
+    カメラを使用するにはHTTPS接続が必要です。<br>
+    開発中は localhost でも利用できます。
+</div>
 
-        <div class="scan-frame">
-            <div class="scan-line"></div>
-        </div>
+<!-- カメラ -->
+<div class="camera">
 
-    </div>
+    <video
+        id="video"
+        autoplay
+        muted
+        playsinline>
+    </video>
 
-    <!-- ステータス -->
-    <div id="status" class="status">
+    <!-- カメラ未起動メッセージ -->
+    <div
+        id="cameraMessage"
+        class="camera-message">
+
         「カメラ開始」を押してください
     </div>
 
-    <!-- ボタン -->
-    <div class="buttons">
+    <!-- スキャン枠 -->
+    <div class="scan-area">
 
-        <button id="startButton">
-            カメラ開始
-        </button>
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
 
-        <button id="stopButton" disabled>
-            停止
-        </button>
-
-    </div>
-
-    <!-- 読み取り結果 -->
-    <div class="result">
-
-        <div class="result-title">
-            読み取り結果
+        <div
+            id="scanLine"
+            class="scan-line">
         </div>
 
-        <div id="resultText">
-            まだ読み取っていません
-        </div>
-
-    </div>
-
-    <div class="info">
-        <strong>対応イメージ</strong><br>
-        Android / Chrome<br>
-        iPad / Safari<br>
-        iPhone / Safari<br><br>
-
-        ※ カメラを使用するため、HTTPS環境での利用を推奨します。
     </div>
 
 </div>
 
-<canvas id="canvas"></canvas>
+<!-- ステータス -->
+<div
+    id="status"
+    class="status"
+    aria-live="polite">
 
+    QRコードを読み取るには
+    「カメラ開始」を押してください。
+</div>
+
+<!-- ボタン -->
+<div class="buttons">
+
+    <button
+        id="startButton"
+        class="primary"
+        type="button">
+
+        カメラ開始
+
+    </button>
+
+    <button
+        id="stopButton"
+        class="secondary"
+        type="button"
+        disabled>
+
+        カメラ停止
+
+    </button>
+
+</div>
+
+<!-- カメラ選択 -->
+<div
+    id="cameraSelectContainer"
+    class="camera-select"
+    style="display:none;">
+
+    <label for="cameraSelect">
+        使用するカメラ
+    </label>
+
+    <select id="cameraSelect">
+    </select>
+
+</div>
+
+<!-- 読み取り結果 -->
+<div class="result">
+
+    <div class="result-title">
+        読み取り結果
+    </div>
+
+    <div id="result">
+        まだ読み取っていません
+    </div>
+
+    <div class="result-buttons">
+
+        <button
+            id="copyButton"
+            class="secondary"
+            type="button"
+            disabled>
+
+            結果をコピー
+
+        </button>
+
+        <button
+            id="restartButton"
+            class="primary"
+            type="button">
+
+            もう一度読み取る
+
+        </button>
+
+    </div>
+
+</div>
+
+<!-- 説明 -->
+<div class="info">
+
+    <strong>使い方</strong>
+
+    1. 「カメラ開始」をタップ<br>
+    2. カメラの使用を許可<br>
+    3. QRコードを画面中央の枠に合わせる<br>
+    4. 認識すると自動的に停止します<br><br>
+
+    <strong>対応ブラウザ</strong>
+
+    Android / Chrome<br>
+    iPad / Safari<br>
+    iPhone / Safari<br><br>
+
+    ※ カメラ利用にはHTTPSが必要です。
+
+</div>
+```
+
+</div>
+
+<!--
+    ZXing Browser
+    QRコード解析ライブラリ
+
+    CDNを利用するため、
+    HTMLファイル自体は1ファイルで完結します。
+-->
+
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
 
 <script>
 
-    const video = document.getElementById("video");
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
+    /*
+     * DOM
+     */
+    const video =
+        document.getElementById("video");
 
-    const startButton = document.getElementById("startButton");
-    const stopButton = document.getElementById("stopButton");
+    const status =
+        document.getElementById("status");
 
-    const status = document.getElementById("status");
-    const resultText = document.getElementById("resultText");
+    const result =
+        document.getElementById("result");
 
-    let stream = null;
-    let scanning = false;
-    let animationId = null;
+    const startButton =
+        document.getElementById("startButton");
+
+    const stopButton =
+        document.getElementById("stopButton");
+
+    const copyButton =
+        document.getElementById("copyButton");
+
+    const restartButton =
+        document.getElementById("restartButton");
+
+    const cameraSelect =
+        document.getElementById("cameraSelect");
+
+    const cameraSelectContainer =
+        document.getElementById(
+            "cameraSelectContainer"
+        );
+
+    const cameraMessage =
+        document.getElementById(
+            "cameraMessage"
+        );
+
+    const scanLine =
+        document.getElementById(
+            "scanLine"
+        );
+
+    const httpsWarning =
+        document.getElementById(
+            "httpsWarning"
+        );
 
 
     /*
-     * カメラ開始
+     * ZXing
      */
-    async function startCamera() {
+    let codeReader = null;
 
-        try {
+    /*
+     * 現在の読み取り停止用
+     */
+    let controls = null;
 
-            status.textContent = "カメラを起動しています...";
-            status.className = "status";
+    /*
+     * 読み取り中か
+     */
+    let scanning = false;
 
-            /*
-             * 背面カメラを優先
-             *
-             * Android / iPadでQRを読む場合、
-             * environment が重要
-             */
-            stream = await navigator.mediaDevices.getUserMedia({
-
-                video: {
-                    facingMode: {
-                        ideal: "environment"
-                    },
-
-                    width: {
-                        ideal: 1280
-                    },
-
-                    height: {
-                        ideal: 720
-                    }
-                },
-
-                audio: false
-            });
+    /*
+     * 最後に読み取った値
+     */
+    let lastResult = "";
 
 
-            video.srcObject = stream;
+    /*
+     * HTTPSチェック
+     */
+    function checkSecureContext() {
 
-            await video.play();
+        const isLocalhost =
+            location.hostname === "localhost" ||
+            location.hostname === "127.0.0.1";
 
-            scanning = true;
+        const isSecure =
+            window.isSecureContext;
 
-            startButton.disabled = true;
-            stopButton.disabled = false;
+        if (!isSecure && !isLocalhost) {
 
-            status.textContent =
-                "QRコードをカメラにかざしてください";
-
-            scanQRCode();
-
-        }
-        catch (error) {
-
-            console.error(error);
-
-            status.textContent =
-                "カメラを起動できませんでした";
-
-            status.className =
-                "status error";
-
-            if (error.name === "NotAllowedError") {
-
-                status.textContent =
-                    "カメラの使用が拒否されています。ブラウザの設定を確認してください。";
-
-            }
-            else if (error.name === "NotFoundError") {
-
-                status.textContent =
-                    "カメラが見つかりませんでした。";
-
-            }
-            else {
-
-                status.textContent =
-                    "カメラを利用できませんでした: "
-                    + error.message;
-            }
+            httpsWarning.style.display =
+                "block";
         }
     }
 
 
     /*
-     * QRコード解析
-     *
-     * BarcodeDetector APIを使用
+     * ZXing初期化
      */
-    async function scanQRCode() {
+    function initializeZXing() {
 
-        if (!scanning) {
-            return;
+        if (
+            typeof ZXingBrowser ===
+            "undefined"
+        ) {
+
+            setStatus(
+                "QRコード解析ライブラリを読み込めませんでした。インターネット接続を確認してください。",
+                "error"
+            );
+
+            startButton.disabled =
+                true;
+
+            return false;
         }
 
+        codeReader =
+            new ZXingBrowser.BrowserQRCodeReader();
 
-        /*
-         * BarcodeDetectorが利用できるか確認
-         */
-        if (!("BarcodeDetector" in window)) {
+        return true;
+    }
 
-            status.textContent =
-                "このブラウザはBarcodeDetector APIに対応していません。";
 
-            status.className =
-                "status error";
+    /*
+     * ステータス変更
+     */
+    function setStatus(
+        message,
+        type = ""
+    ) {
 
-            return;
+        status.textContent =
+            message;
+
+        status.className =
+            "status";
+
+        if (type) {
+            status.classList.add(type);
         }
+    }
 
+
+    /*
+     * カメラ一覧取得
+     */
+    async function loadCameras() {
 
         try {
 
-            const detector =
-                new BarcodeDetector({
-                    formats: ["qr_code"]
-                });
-
-
             /*
-             * カメラ映像をcanvasへコピー
+             * 一度カメラ権限を取得した後なら
+             * labelが取得できる
              */
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            const devices =
+                await navigator.mediaDevices
+                    .enumerateDevices();
 
-            ctx.drawImage(
-                video,
-                0,
-                0,
-                canvas.width,
-                canvas.height
+            const cameras =
+                devices.filter(
+                    device =>
+                        device.kind ===
+                        "videoinput"
+                );
+
+
+            cameraSelect.innerHTML = "";
+
+
+            cameras.forEach(
+                (camera, index) => {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+                    option.value =
+                        camera.deviceId;
+
+                    option.textContent =
+                        camera.label ||
+                        `カメラ ${index + 1}`;
+
+                    cameraSelect.appendChild(
+                        option
+                    );
+                }
             );
 
 
-            /*
-             * QRコード検出
-             */
-            const codes =
-                await detector.detect(canvas);
+            if (cameras.length > 1) {
 
+                cameraSelectContainer
+                    .style.display = "block";
 
-            if (codes.length > 0) {
+            }
+            else {
 
-                const value =
-                    codes[0].rawValue;
-
-                handleQRCode(value);
-
-                return;
+                cameraSelectContainer
+                    .style.display = "none";
             }
 
         }
         catch (error) {
 
             console.error(
-                "QR解析エラー:",
+                "カメラ一覧取得エラー",
                 error
             );
         }
-
-
-        /*
-         * 次のフレームで再度解析
-         */
-        animationId =
-            requestAnimationFrame(scanQRCode);
     }
 
 
     /*
-     * QRコード読み取り成功
+     * カメラ開始
      */
-    function handleQRCode(value) {
+    async function startCamera(
+        deviceId = null
+    ) {
 
-        resultText.textContent = value;
+        if (!codeReader) {
 
-        status.textContent =
-            "QRコードを読み取りました！";
-
-        status.className =
-            "status success";
-
-
-        /*
-         * 連続読み取りを停止
-         */
-        scanning = false;
-
-        if (animationId) {
-
-            cancelAnimationFrame(animationId);
-
-            animationId = null;
+            if (!initializeZXing()) {
+                return;
+            }
         }
 
 
         /*
-         * バイブレーション
-         *
-         * Androidなど対応端末では
-         * 読み取り時に振動する
+         * すでに動いていたら停止
          */
-        if ("vibrate" in navigator) {
+        stopCamera();
+
+
+        setStatus(
+            "カメラを起動しています..."
+        );
+
+
+        cameraMessage.style.display =
+            "flex";
+
+
+        try {
+
+            scanning = true;
+
+            startButton.disabled =
+                true;
+
+            stopButton.disabled =
+                false;
+
+
+            /*
+             * カメラ設定
+             *
+             * deviceIdが指定されていなければ
+             * 背面カメラを優先
+             */
+            let constraints;
+
+
+            if (deviceId) {
+
+                constraints = {
+                    video: {
+                        deviceId: {
+                            exact: deviceId
+                        }
+                    }
+                };
+
+            }
+            else {
+
+                constraints = {
+                    video: {
+                        facingMode: {
+                            ideal: "environment"
+                        },
+
+                        width: {
+                            ideal: 1280
+                        },
+
+                        height: {
+                            ideal: 720
+                        }
+                    }
+                };
+            }
+
+
+            /*
+             * ZXingでカメラから直接読み取り
+             */
+            controls =
+                await codeReader.decodeFromConstraints(
+                    constraints,
+                    video,
+                    (scanResult, error) => {
+
+                        /*
+                         * QR読み取り成功
+                         */
+                        if (scanResult) {
+
+                            const text =
+                                scanResult.getText();
+
+                            handleResult(text);
+
+                            return;
+                        }
+
+
+                        /*
+                         * NotFoundExceptionは
+                         * 普通に「まだQRがない」
+                         * という状態なので無視
+                         */
+                        if (error) {
+
+                            if (
+                                !(
+                                    error instanceof
+                                    ZXingBrowser
+                                        .NotFoundException
+                                )
+                            ) {
+
+                                console.debug(
+                                    "QR解析:",
+                                    error
+                                );
+                            }
+                        }
+                    }
+                );
+
+
+            cameraMessage.style.display =
+                "none";
+
+            setStatus(
+                "QRコードをカメラにかざしてください"
+            );
+
+
+            /*
+             * カメラ一覧取得
+             */
+            await loadCameras();
+
+        }
+        catch (error) {
+
+            console.error(
+                "カメラ起動エラー:",
+                error
+            );
+
+            scanning = false;
+
+            startButton.disabled =
+                false;
+
+            stopButton.disabled =
+                true;
+
+            handleCameraError(error);
+        }
+    }
+
+
+    /*
+     * カメラエラー処理
+     */
+    function handleCameraError(error) {
+
+        let message =
+            "カメラを起動できませんでした。";
+
+
+        if (
+            error &&
+            error.name ===
+                "NotAllowedError"
+        ) {
+
+            message =
+                "カメラの使用が拒否されています。ブラウザのカメラ設定を確認してください。";
+
+        }
+        else if (
+            error &&
+            error.name ===
+                "NotFoundError"
+        ) {
+
+            message =
+                "カメラが見つかりませんでした。";
+
+        }
+        else if (
+            error &&
+            error.name ===
+                "NotReadableError"
+        ) {
+
+            message =
+                "カメラを使用できません。他のアプリがカメラを使用していないか確認してください。";
+
+        }
+        else if (
+            error &&
+            error.name ===
+                "SecurityError"
+        ) {
+
+            message =
+                "カメラへのアクセスがセキュリティ上の理由で拒否されました。HTTPSでアクセスしてください。";
+
+        }
+        else if (
+            !window.isSecureContext
+        ) {
+
+            message =
+                "HTTPS環境でアクセスしてください。";
+
+        }
+
+
+        setStatus(
+            message,
+            "error"
+        );
+
+        cameraMessage.style.display =
+            "flex";
+    }
+
+
+    /*
+     * QR読み取り成功
+     */
+    function handleResult(text) {
+
+        if (!scanning) {
+            return;
+        }
+
+
+        lastResult = text;
+
+
+        /*
+         * カメラ停止
+         */
+        stopCamera();
+
+
+        /*
+         * 結果表示
+         */
+        result.textContent =
+            text;
+
+        copyButton.disabled =
+            false;
+
+
+        setStatus(
+            "QRコードを読み取りました！",
+            "success"
+        );
+
+
+        /*
+         * 読み取り成功時のバイブレーション
+         */
+        if (
+            "vibrate" in navigator
+        ) {
 
             navigator.vibrate(200);
         }
@@ -498,59 +1085,217 @@
         scanning = false;
 
 
-        if (animationId) {
+        /*
+         * ZXingのカメラ制御を停止
+         */
+        if (controls) {
 
-            cancelAnimationFrame(animationId);
+            try {
+                controls.stop();
+            }
+            catch (error) {
+                console.debug(error);
+            }
 
-            animationId = null;
+            controls = null;
         }
 
 
-        if (stream) {
+        /*
+         * videoのMediaStreamも停止
+         */
+        if (video.srcObject) {
 
-            stream
-                .getTracks()
-                .forEach(track => track.stop());
+            const tracks =
+                video.srcObject
+                    .getTracks();
 
-            stream = null;
+            tracks.forEach(
+                track => track.stop()
+            );
+
+            video.srcObject = null;
         }
 
 
-        video.srcObject = null;
+        startButton.disabled =
+            false;
 
-        startButton.disabled = false;
-        stopButton.disabled = true;
+        stopButton.disabled =
+            true;
 
-        status.textContent =
-            "カメラを停止しました";
-
-        status.className =
-            "status";
+        cameraMessage.style.display =
+            "flex";
     }
 
 
     /*
-     * ボタンイベント
+     * コピー
      */
-    startButton.addEventListener(
-        "click",
-        startCamera
-    );
+    async function copyResult() {
 
-    stopButton.addEventListener(
-        "click",
-        stopCamera
+        if (!lastResult) {
+            return;
+        }
+
+
+        try {
+
+            /*
+             * Clipboard API
+             */
+            await navigator.clipboard
+                .writeText(lastResult);
+
+            setStatus(
+                "読み取り結果をコピーしました。",
+                "success"
+            );
+
+        }
+        catch (error) {
+
+            /*
+             * iPadなどでClipboard APIが
+             * 利用できない場合の簡易対応
+             */
+            const textarea =
+                document.createElement(
+                    "textarea"
+                );
+
+            textarea.value =
+                lastResult;
+
+            document.body.appendChild(
+                textarea
+            );
+
+            textarea.select();
+
+            try {
+
+                document.execCommand(
+                    "copy"
+                );
+
+                setStatus(
+                    "読み取り結果をコピーしました。",
+                    "success"
+                );
+
+            }
+            catch (copyError) {
+
+                setStatus(
+                    "コピーできませんでした。結果を長押ししてコピーしてください。",
+                    "warning"
+                );
+            }
+
+            document.body.removeChild(
+                textarea
+            );
+        }
+    }
+
+
+    /*
+     * カメラ切り替え
+     */
+    cameraSelect.addEventListener(
+        "change",
+        async () => {
+
+            const deviceId =
+                cameraSelect.value;
+
+            if (deviceId) {
+
+                await startCamera(
+                    deviceId
+                );
+            }
+        }
     );
 
 
     /*
-     * ページを離れるときに
+     * カメラ開始
+     */
+    startButton.addEventListener(
+        "click",
+        async () => {
+
+            await startCamera();
+        }
+    );
+
+
+    /*
+     * カメラ停止
+     */
+    stopButton.addEventListener(
+        "click",
+        () => {
+
+            stopCamera();
+
+            setStatus(
+                "カメラを停止しました。"
+            );
+        }
+    );
+
+
+    /*
+     * もう一度読み取る
+     */
+    restartButton.addEventListener(
+        "click",
+        async () => {
+
+            result.textContent =
+                "まだ読み取っていません";
+
+            lastResult = "";
+
+            copyButton.disabled =
+                true;
+
+            await startCamera();
+        }
+    );
+
+
+    /*
+     * コピー
+     */
+    copyButton.addEventListener(
+        "click",
+        copyResult
+    );
+
+
+    /*
+     * ページを離れるとき
      * カメラを停止
      */
     window.addEventListener(
         "pagehide",
-        stopCamera
+        () => {
+
+            stopCamera();
+        }
     );
+
+
+    /*
+     * 初期化
+     */
+    checkSecureContext();
+
+    initializeZXing();
 
 </script>
 
