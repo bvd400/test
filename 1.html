@@ -1,98 +1,883 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>製造実績登録</title>
+    <meta charset="UTF-8">
+
+```
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+<title>QRコード読み取りデモ</title>
+
+<!--
+    html5-qrcode
+    QRコード / バーコード読み取りライブラリ
+-->
+<script src="https://unpkg.com/html5-qrcode"></script>
+
 <style>
-body{
-    font-family:sans-serif;
-    background:#f2f5f8;
-    margin:0;
-}
 
-.header{
-    background:#0067c5;
-    color:white;
-    padding:20px;
-    font-size:22px;
-}
+    * {
+        box-sizing: border-box;
+    }
 
-.card{
-    background:white;
-    margin:15px;
-    padding:20px;
-    border-radius:15px;
-}
+    body {
+        margin: 0;
+        background: #f5f6f8;
+        color: #222;
+        font-family:
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+    }
 
-.label{
-    color:#666;
-    font-size:14px;
-}
+    .container {
+        width: min(100% - 24px, 600px);
+        margin: 0 auto;
+        padding: 24px 0 40px;
+    }
 
-.value{
-    font-size:20px;
-    font-weight:bold;
-}
+    h1 {
+        margin: 0;
+        font-size: 24px;
+    }
 
-.input{
-    width:100%;
-    font-size:28px;
-    padding:15px;
-    text-align:center;
-}
+    .description {
+        margin-top: 6px;
+        margin-bottom: 20px;
+        color: #666;
+        font-size: 14px;
+    }
 
-button{
-    width:100%;
-    padding:20px;
-    margin-top:15px;
-    border:none;
-    border-radius:10px;
-    font-size:22px;
-    background:#0067c5;
-    color:white;
-}
+    /*
+     * QRカメラ画面
+     */
+    #reader {
+        width: 100%;
+        overflow: hidden;
+
+        background: #111;
+        border-radius: 16px;
+    }
+
+    /*
+     * html5-qrcodeが生成する要素を調整
+     */
+    #reader video {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /*
+     * ステータス
+     */
+    .status {
+        margin-top: 14px;
+        padding: 14px 16px;
+
+        background: white;
+        border-radius: 10px;
+
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .status.success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status.error {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .status.warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    /*
+     * ボタン
+     */
+    .buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+
+        margin-top: 12px;
+    }
+
+    button {
+        min-height: 48px;
+
+        border: 0;
+        border-radius: 10px;
+
+        font-size: 16px;
+        font-weight: 600;
+
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+
+    .primary {
+        background: #2563eb;
+        color: white;
+    }
+
+    .secondary {
+        background: #e5e7eb;
+        color: #222;
+    }
+
+    button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    /*
+     * 読み取り結果
+     */
+    .result {
+        margin-top: 20px;
+        padding: 18px;
+
+        background: white;
+        border-radius: 12px;
+    }
+
+    .result-title {
+        margin-bottom: 8px;
+
+        font-size: 14px;
+        font-weight: bold;
+        color: #444;
+    }
+
+    #resultText {
+        min-height: 48px;
+
+        padding: 12px;
+
+        background: #f3f4f6;
+        border-radius: 8px;
+
+        word-break: break-all;
+        line-height: 1.6;
+    }
+
+    /*
+     * 補足
+     */
+    .info {
+        margin-top: 20px;
+        padding: 16px;
+
+        background: #e0f2fe;
+        border-radius: 12px;
+
+        color: #075985;
+
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .info strong {
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    /*
+     * HTTPS警告
+     */
+    #httpsWarning {
+        display: none;
+
+        margin-bottom: 14px;
+        padding: 14px;
+
+        background: #fef3c7;
+        color: #92400e;
+
+        border-radius: 10px;
+
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 480px) {
+
+        .container {
+            padding-top: 16px;
+        }
+
+        h1 {
+            font-size: 21px;
+        }
+
+        #reader {
+            border-radius: 12px;
+        }
+    }
+
 </style>
+```
+
 </head>
 
 <body>
 
-<div class="header">
-製造実績登録
-</div>
+<div class="container">
 
-<div class="card">
-<div class="label">作業者</div>
-<div class="value">山田 太郎</div>
+```
+<h1>QRコード読み取り</h1>
 
-<br>
-
-<div class="label">設備</div>
-<div class="value">NC旋盤 A-01</div>
-
-<br>
-
-<div class="label">品番</div>
-<div class="value">ABC-12345</div>
+<div class="description">
+    Android Chrome / iPad Safari 対応デモ
 </div>
 
 
-<div class="card">
+<!-- HTTPS警告 -->
+<div id="httpsWarning">
 
-<div class="label">完成数量</div>
+    カメラを使用するにはHTTPS接続が必要です。<br>
 
-<input class="input" value="120">
-
-<div class="label">不良数量</div>
-
-<input class="input" value="2">
-
-
-<button>
-登録する
-</button>
+    開発中は localhost でも利用できます。
 
 </div>
+
+
+<!--
+    html5-qrcodeが
+    ここにカメラUIを生成する
+-->
+<div id="reader"></div>
+
+
+<!-- ステータス -->
+<div
+    id="status"
+    class="status"
+    aria-live="polite">
+
+    「カメラ開始」を押してください。
+
+</div>
+
+
+<!-- ボタン -->
+<div class="buttons">
+
+    <button
+        id="startButton"
+        class="primary"
+        type="button">
+
+        カメラ開始
+
+    </button>
+
+
+    <button
+        id="stopButton"
+        class="secondary"
+        type="button"
+        disabled>
+
+        カメラ停止
+
+    </button>
+
+</div>
+
+
+<!-- 読み取り結果 -->
+<div class="result">
+
+    <div class="result-title">
+        読み取り結果
+    </div>
+
+
+    <div id="resultText">
+        まだ読み取っていません
+    </div>
+
+
+    <div
+        class="buttons"
+        style="margin-top:10px;">
+
+        <button
+            id="copyButton"
+            class="secondary"
+            type="button"
+            disabled>
+
+            結果をコピー
+
+        </button>
+
+
+        <button
+            id="clearButton"
+            class="primary"
+            type="button">
+
+            結果をクリア
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- 説明 -->
+<div class="info">
+
+    <strong>使い方</strong>
+
+    1. 「カメラ開始」をタップ<br>
+    2. カメラの使用を許可<br>
+    3. QRコードを画面中央に合わせる<br>
+    4. QRコードを認識すると結果が表示されます<br><br>
+
+
+    <strong>対応</strong>
+
+    Android Chrome<br>
+    iPad Safari<br>
+    iPhone Safari<br><br>
+
+
+    <strong>注意</strong>
+
+    カメラを使用するため、
+    HTTPS環境での利用を推奨します。
+
+</div>
+```
+
+</div>
+
+<script>
+
+    /*
+     * html5-qrcode
+     */
+    let html5QrCode = null;
+
+
+    /*
+     * 現在カメラが起動しているか
+     */
+    let scanning = false;
+
+
+    /*
+     * 最後の読み取り結果
+     */
+    let lastResult = "";
+
+
+    /*
+     * DOM
+     */
+    const status =
+        document.getElementById("status");
+
+    const resultText =
+        document.getElementById("resultText");
+
+    const startButton =
+        document.getElementById("startButton");
+
+    const stopButton =
+        document.getElementById("stopButton");
+
+    const copyButton =
+        document.getElementById("copyButton");
+
+    const clearButton =
+        document.getElementById("clearButton");
+
+    const httpsWarning =
+        document.getElementById("httpsWarning");
+
+
+    /*
+     * HTTPSチェック
+     */
+    function checkHttps() {
+
+        const localhost =
+            location.hostname === "localhost" ||
+            location.hostname === "127.0.0.1";
+
+        if (
+            !window.isSecureContext &&
+            !localhost
+        ) {
+
+            httpsWarning.style.display =
+                "block";
+        }
+    }
+
+
+    /*
+     * ステータス変更
+     */
+    function setStatus(
+        message,
+        type = ""
+    ) {
+
+        status.textContent =
+            message;
+
+        status.className =
+            "status";
+
+        if (type) {
+
+            status.classList.add(type);
+        }
+    }
+
+
+    /*
+     * カメラ開始
+     */
+    async function startScanner() {
+
+        if (scanning) {
+            return;
+        }
+
+
+        try {
+
+            setStatus(
+                "カメラを起動しています..."
+            );
+
+
+            /*
+             * QRスキャナー生成
+             */
+            html5QrCode =
+                new Html5Qrcode(
+                    "reader"
+                );
+
+
+            /*
+             * カメラ設定
+             *
+             * facingMode: environment
+             * → 背面カメラを優先
+             */
+            const config = {
+
+                fps: 10,
+
+                qrbox: function(
+                    viewfinderWidth,
+                    viewfinderHeight
+                ) {
+
+                    /*
+                     * QR読み取り領域
+                     *
+                     * 画面幅の65%程度
+                     */
+                    const size =
+                        Math.min(
+                            viewfinderWidth,
+                            viewfinderHeight
+                        ) * 0.65;
+
+                    return {
+                        width: size,
+                        height: size
+                    };
+                },
+
+                aspectRatio: 1.333334
+
+            };
+
+
+            /*
+             * カメラ開始
+             */
+            await html5QrCode.start(
+
+                {
+                    facingMode: "environment"
+                },
+
+                config,
+
+                /*
+                 * QR読み取り成功
+                 */
+                onScanSuccess,
+
+                /*
+                 * QRがまだ見つからない場合
+                 *
+                 * ここでは何もしない
+                 */
+                onScanFailure
+            );
+
+
+            scanning = true;
+
+
+            startButton.disabled =
+                true;
+
+            stopButton.disabled =
+                false;
+
+
+            setStatus(
+                "QRコードをカメラにかざしてください。"
+            );
+
+        }
+        catch (error) {
+
+            console.error(
+                "カメラ起動エラー:",
+                error
+            );
+
+
+            scanning = false;
+
+
+            startButton.disabled =
+                false;
+
+            stopButton.disabled =
+                true;
+
+
+            handleCameraError(error);
+        }
+    }
+
+
+    /*
+     * QR読み取り成功
+     */
+    async function onScanSuccess(
+        decodedText,
+        decodedResult
+    ) {
+
+        /*
+         * 二重読み取り防止
+         */
+        if (!scanning) {
+            return;
+        }
+
+
+        lastResult =
+            decodedText;
+
+
+        /*
+         * 結果表示
+         */
+        resultText.textContent =
+            decodedText;
+
+
+        copyButton.disabled =
+            false;
+
+
+        setStatus(
+            "QRコードを読み取りました！",
+            "success"
+        );
+
+
+        /*
+         * 振動
+         *
+         * Androidなど対応端末のみ
+         */
+        if (
+            "vibrate" in navigator
+        ) {
+
+            navigator.vibrate(200);
+        }
+
+
+        /*
+         * カメラ停止
+         *
+         * awaitする
+         */
+        await stopScanner();
+    }
+
+
+    /*
+     * QRが見つからない場合
+     */
+    function onScanFailure(error) {
+
+        /*
+         * QRが見つからないこと自体は
+         * エラーではない。
+         *
+         * 何もしない。
+         */
+    }
+
+
+    /*
+     * カメラ停止
+     */
+    async function stopScanner() {
+
+        if (!html5QrCode) {
+            return;
+        }
+
+
+        try {
+
+            if (scanning) {
+
+                await html5QrCode.stop();
+            }
+
+        }
+        catch (error) {
+
+            console.error(
+                "カメラ停止エラー:",
+                error
+            );
+        }
+
+
+        /*
+         * カメラ映像をクリア
+         */
+        try {
+
+            html5QrCode.clear();
+
+        }
+        catch (error) {
+
+            console.debug(
+                "clear:",
+                error
+            );
+        }
+
+
+        html5QrCode = null;
+
+        scanning = false;
+
+
+        startButton.disabled =
+            false;
+
+        stopButton.disabled =
+            true;
+    }
+
+
+    /*
+     * カメラエラー
+     */
+    function handleCameraError(error) {
+
+        let message =
+            "カメラを起動できませんでした。";
+
+
+        if (
+            error &&
+            error.name ===
+                "NotAllowedError"
+        ) {
+
+            message =
+                "カメラの使用が拒否されています。ブラウザのカメラ設定を確認してください。";
+
+        }
+        else if (
+            error &&
+            error.name ===
+                "NotFoundError"
+        ) {
+
+            message =
+                "カメラが見つかりませんでした。";
+
+        }
+        else if (
+            error &&
+            error.name ===
+                "NotReadableError"
+        ) {
+
+            message =
+                "カメラを使用できません。他のアプリがカメラを使用していないか確認してください。";
+
+        }
+        else if (
+            !window.isSecureContext
+        ) {
+
+            message =
+                "HTTPS環境でアクセスしてください。";
+        }
+
+
+        setStatus(
+            message,
+            "error"
+        );
+    }
+
+
+    /*
+     * コピー
+     */
+    async function copyResult() {
+
+        if (!lastResult) {
+            return;
+        }
+
+
+        try {
+
+            await navigator.clipboard.writeText(
+                lastResult
+            );
+
+
+            setStatus(
+                "読み取り結果をコピーしました。",
+                "success"
+            );
+
+        }
+        catch (error) {
+
+            /*
+             * Clipboard APIが使えない場合
+             */
+            setStatus(
+                "コピーできませんでした。結果を長押ししてコピーしてください。",
+                "warning"
+            );
+        }
+    }
+
+
+    /*
+     * 結果クリア
+     */
+    function clearResult() {
+
+        lastResult = "";
+
+        resultText.textContent =
+            "まだ読み取っていません";
+
+        copyButton.disabled =
+            true;
+
+        setStatus(
+            "結果をクリアしました。"
+        );
+    }
+
+
+    /*
+     * カメラ開始
+     */
+    startButton.addEventListener(
+        "click",
+        startScanner
+    );
+
+
+    /*
+     * カメラ停止
+     */
+    stopButton.addEventListener(
+        "click",
+        async () => {
+
+            await stopScanner();
+
+            setStatus(
+                "カメラを停止しました。"
+            );
+        }
+    );
+
+
+    /*
+     * コピー
+     */
+    copyButton.addEventListener(
+        "click",
+        copyResult
+    );
+
+
+    /*
+     * クリア
+     */
+    clearButton.addEventListener(
+        "click",
+        clearResult
+    );
+
+
+    /*
+     * ページを離れるとき
+     */
+    window.addEventListener(
+        "pagehide",
+        () => {
+
+            stopScanner();
+        }
+    );
+
+
+    /*
+     * 初期化
+     */
+    checkHttps();
+
+</script>
 
 </body>
 </html>
